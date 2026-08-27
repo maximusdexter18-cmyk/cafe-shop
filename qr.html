@@ -29,7 +29,8 @@
   .qr-card{background:#fff; color:#111; border-radius:8px; padding:18px; text-align:center;}
   .qr-card .table-no{font-family:'Fraunces',serif; font-size:1.3rem; font-weight:700; margin-bottom:4px;}
   .qr-card .url{font-size:0.72rem; color:#555; word-break:break-all; margin:10px 0; }
-  .qr-card canvas{margin:0 auto; display:block; width:170px; height:170px;}
+  .qr-card .qr-canvas-wrap{display:flex; justify-content:center;}
+  .qr-card .qr-canvas-wrap canvas{display:block; width:170px; height:170px;}
   .qr-card a.dl{display:inline-block; margin-top:10px; font-size:0.78rem; color:#9c3f2b; text-decoration:none; font-weight:600;}
 
   @media print{
@@ -87,20 +88,26 @@ document.getElementById('genBtn').addEventListener('click', () => {
     const card = document.createElement('div');
     card.className = 'qr-card';
     card.innerHTML = `<div class="table-no">Table ${n}</div><div class="url">${url}</div>`;
-    const canvas = document.createElement('canvas');
-    card.appendChild(canvas);
+
+    // QRCode.js needs a plain container element — it builds its OWN canvas
+    // inside this div. Handing it a <canvas> directly (the old bug) causes it
+    // to insert its result as a child of the canvas, which never renders,
+    // even though the library still successfully generates the image data.
+    const qrContainer = document.createElement('div');
+    qrContainer.className = 'qr-canvas-wrap';
+    card.appendChild(qrContainer);
     grid.appendChild(card);
 
-    // Render QR into the canvas, then wire a download link from the raster.
-    new QRCode(canvas, { text: url, width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M });
-    setTimeout(() => {
-      const link = document.createElement('a');
-      link.className = 'dl';
-      link.textContent = 'Download PNG';
-      link.download = `amber-ash-table-${n}.png`;
-      link.href = canvas.toDataURL('image/png');
-      card.appendChild(link);
-    }, 120);
+    new QRCode(qrContainer, { text: url, width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M });
+
+    // Grab the actual canvas QRCode.js created inside our container for the download link.
+    const realCanvas = qrContainer.querySelector('canvas');
+    const link = document.createElement('a');
+    link.className = 'dl';
+    link.textContent = 'Download PNG';
+    link.download = `amber-ash-table-${n}.png`;
+    link.href = realCanvas ? realCanvas.toDataURL('image/png') : '#';
+    card.appendChild(link);
   }
 });
 
