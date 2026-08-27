@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu — Amber & Ash</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#E31837; --red-dk:#B3122B; --blue:#006491; --ink:#1a1a1a; --paper:#ffffff;
+    --muted:#6b6b6b; --line:#e6e6e6; --chip:#f4f4f4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; overflow-x:hidden;}
+  h1,h2,h3{font-weight:800; letter-spacing:-0.02em;}
+
+  nav{position:sticky; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 6vw; z-index:60; background:#fff; border-bottom:1px solid var(--line);}
+  nav .logo{font-weight:800; font-size:1.25rem; letter-spacing:-0.02em; color:var(--red); text-transform:uppercase;}
+  nav .links{display:flex; gap:26px; font-weight:700; font-size:0.82rem; text-transform:uppercase;}
+  nav .links a{color:var(--ink); text-decoration:none;}
+  nav .links a:hover{color:var(--red);}
+  nav .order-pill{background:var(--red); color:#fff; padding:10px 18px; border-radius:40px; font-weight:800; font-size:0.8rem; text-decoration:none;}
+
+  .head{max-width:1180px; margin:0 auto; padding:60px 6vw 10px;}
+  .head .eyebrow{display:inline-block; background:var(--chip); color:var(--red); font-weight:800; letter-spacing:0.14em; text-transform:uppercase; font-size:0.72rem; padding:7px 14px; border-radius:30px;}
+  .head h1{font-size:clamp(2rem,4vw,3rem); margin:16px 0 6px;}
+  .head p{color:var(--muted); max-width:60ch;}
+
+  /* category pills */
+  .pills{max-width:1180px; margin:0 auto; padding:24px 6vw; display:flex; gap:10px; flex-wrap:wrap; position:sticky; top:60px; background:var(--paper); z-index:40; border-bottom:1px solid var(--line);}
+  .pills button{background:#fff; border:1px solid var(--line); color:var(--ink); font-weight:700; font-size:0.82rem; padding:9px 18px; border-radius:40px; cursor:pointer; transition:all .2s;}
+  .pills button.active{background:var(--red); color:#fff; border-color:var(--red);}
+  .pills button:hover{border-color:var(--red);}
+
+  main{max-width:1180px; margin:0 auto; padding:30px 6vw 8vh;}
+  .cat-block{margin-bottom:50px;}
+  .cat-block h2{font-size:1.5rem; margin:0 0 18px; color:var(--red);}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  .item{background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; transition:transform .3s ease, box-shadow .3s ease;}
+  .item:hover{transform:translateY(-5px); box-shadow:0 18px 40px rgba(0,0,0,0.10);}
+  .item .pic{height:150px; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:2.4rem; letter-spacing:-0.04em;}
+  .item .pic img{width:100%; height:100%; object-fit:cover;}
+  .item .body{padding:18px; flex:1; display:flex; flex-direction:column;}
+  .item .top{display:flex; justify-content:space-between; align-items:baseline; gap:12px;}
+  .item .name{font-weight:800; font-size:1.05rem;}
+  .item .price{font-weight:800; color:var(--red); white-space:nowrap;}
+  .item .desc{color:var(--muted); font-size:0.84rem; line-height:1.5; margin:8px 0 16px; flex:1;}
+  .item .add{background:var(--red); color:#fff; border:none; padding:11px; border-radius:30px; font-weight:800; cursor:pointer; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.03em;}
+  .item .add:hover{background:var(--red-dk);}
+
+  .loading{text-align:center; padding:80px 20px; color:var(--muted); font-weight:700;}
+  .loading .skel{width:120px; height:8px; border-radius:6px; margin:14px auto; background:linear-gradient(90deg,var(--line),#fff,var(--line)); background-size:200% 100%; animation:sk 1.3s linear infinite;}
+  @keyframes sk{from{background-position:200% 0;} to{background-position:-200% 0;}}
+  .loading .skel-txt{animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:0.45;} 50%{opacity:1;}}
+
+  @media (max-width:900px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:600px){ .grid{grid-template-columns:1fr;} nav .links{display:none;} }
+  @media (prefers-reduced-motion: reduce){ .loading .skel,.loading .skel-txt{animation:none;} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Amber & Ash</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order</a>
+    <a href="booking.html">Book</a>
+  </div>
+  <a class="order-pill" href="order.html">Order now</a>
+</nav>
+
+<div class="head">
+  <span class="eyebrow">All day, every day</span>
+  <h1>Our menu</h1>
+  <p>Fresh roasts, bakes, and bowls. Tap a category to jump straight to it.</p>
+</div>
+
+<div class="pills" id="pills"></div>
+
+<main id="menu"></main>
+<div class="loading" id="loading"><div class="skel"></div><div class="skel-txt">Loading the menu…</div></div>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script src="footer.js"></script>
+<script>
+
+// Surface any module-level error instead of failing silently on a blank page.
+window.addEventListener('error', (e) => {
+  const el = document.getElementById('loading');
+  if (el) el.innerHTML = '<div style="color:var(--red);">Menu failed to load.<br><small>' + (e.message || (e.error && e.error.message) || 'unknown error') + '</small></div>';
+});
+
+renderFooter();
+
+const menuEl = document.getElementById('menu');
+const pillsEl = document.getElementById('pills');
+const loading = document.getElementById('loading');
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let categories = [];
+
+async function loadMenu() {
+  let items, error;
+  try {
+    const q = supabase
+      .from('menu_items').select('*').eq('is_available', true).order('sort_order');
+    const to = new Promise((_, rej) => setTimeout(() => rej(new Error('Menu request timed out')), 10000));
+    const res = await Promise.race([q, to]);
+    items = res.data;
+    error = res.error;
+  } catch (e) {
+    error = e;
+  }
+  if (error || !items) {
+    console.error('Menu load failed:', error);
+    loading.innerHTML = '<div style="color:var(--red);">Couldn\'t load the menu right now.<br><small>' + (error && error.message ? error.message : '') + '</small><br>Please refresh or ask staff.</div>';
+    return;
+  }
+
+  categories = [];
+  items.forEach(i => { if (!categories.includes(i.category)) categories.push(i.category); });
+
+  // build pills
+  pillsEl.innerHTML = categories.map((c, idx) =>
+    `<button class="${idx === 0 ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('');
+  pillsEl.querySelectorAll('button').forEach(b => b.onclick = () => {
+    document.getElementById('cat-' + slug(b.dataset.cat)).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  // build blocks
+  menuEl.innerHTML = categories.map(c => {
+    const list = items.filter(i => i.category === c);
+    return `<section class="cat-block" id="cat-${slug(c)}">
+      <h2>${c}</h2>
+      <div class="grid">${list.map(it => `
+        <div class="item">
+          <div class="pic">${it.image_url ? `<img src="${it.image_url}" alt="${it.name}">` : initials(it.name)}</div>
+          <div class="body">
+            <div class="top"><span class="name">${it.name}</span><span class="price">₹${it.price}</span></div>
+            <div class="desc">${it.description ?? ''}</div>
+            <button class="add" type="button" onclick="location.href='order.html?focus=${encodeURIComponent(it.name)}'">Add</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </section>`;
+  }).join('');
+
+  loading.style.display = 'none';
+}
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+function initials(s){ return s.replace(/[^A-Za-z ]/g,'').trim().charAt(0).toUpperCase() || '✶'; }
+
+loadMenu().catch(e => {
+  console.error('Unhandled menu error:', e);
+  loading.innerHTML = '<div style="color:var(--red);">Couldn\'t load the menu right now.<br>Please refresh or ask staff.</div>';
+});
+</script>
+</body>
+</html>

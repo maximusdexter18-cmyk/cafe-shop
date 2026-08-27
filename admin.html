@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu Manager — Amber & Ash</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --espresso:#ffffff; --espresso-2:#f4f4f4; --cream:#1a1a1a; --cream-dim:#6b6b6b; --brass:#E31837; --red:#E31837; --blue:#006491; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--espresso); color:var(--cream); font-family:'Inter',sans-serif; min-height:100vh;}
+  header{padding:22px 32px; border-bottom:1px solid rgba(201,154,68,0.2); display:flex; justify-content:space-between; align-items:center;}
+  header .logo{font-family:'Fraunces',serif; font-size:1.2rem;}
+  header .logout{background:transparent; border:1px solid var(--cream-dim); color:var(--cream); padding:8px 14px; border-radius:2px; cursor:pointer; font-size:0.8rem;}
+  main{max-width:900px; margin:0 auto; padding:32px 20px 80px;}
+
+  .gate{max-width:360px; margin:12vh auto 0; background:var(--espresso-2); border:1px solid rgba(201,154,68,0.25); border-radius:8px; padding:30px;}
+  .gate h2{font-family:'Fraunces',serif; color:var(--brass); margin-bottom:16px; font-size:1.3rem;}
+  label{font-size:0.78rem; color:var(--cream-dim); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em;}
+  input, textarea, select{width:100%; background:var(--espresso); border:1px solid rgba(205,191,168,0.3); color:var(--cream); padding:10px 12px; border-radius:3px; font-family:inherit; font-size:0.92rem;}
+  textarea{resize:vertical; min-height:50px;}
+  .gate button{margin-top:16px; width:100%; background:var(--brass); color:var(--espresso); border:none; padding:12px; border-radius:2px; font-weight:600; cursor:pointer; font-size:0.95rem;}
+  .gate .msg{font-size:0.82rem; margin-top:12px; min-height:16px; color:#e88a76;}
+
+  .add-card{background:var(--espresso-2); border:1px solid rgba(201,154,68,0.25); border-radius:6px; padding:24px; margin-bottom:32px;}
+  .add-card h2{font-family:'Fraunces',serif; font-size:1.1rem; margin:0 0 16px; color:var(--brass);}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  .form-row.full{grid-template-columns:1fr;}
+  .save-btn{background:var(--brass); color:var(--espresso); border:none; padding:12px 24px; border-radius:2px; font-weight:600; cursor:pointer; font-size:0.9rem;}
+  .save-btn:disabled{opacity:0.5; cursor:not-allowed;}
+  .status-msg{font-size:0.85rem; margin-top:10px; min-height:18px;}
+  .status-msg.ok{color:#7fa06a;}
+  .status-msg.err{color:#d4664d;}
+
+  .list h2{font-family:'Fraunces',serif; font-size:1.1rem; color:var(--brass); margin:28px 0 14px;}
+  .row{display:flex; align-items:center; gap:14px; padding:14px; background:var(--espresso-2); border-radius:6px; margin-bottom:10px; border:1px solid rgba(201,154,68,0.15);}
+  .row.unavailable{opacity:0.5;}
+  .row .info{flex:1;}
+  .row .name{font-weight:600;}
+  .row .meta{font-size:0.8rem; color:var(--cream-dim); margin-top:2px;}
+  .row .price{font-family:'Fraunces',serif; color:var(--brass); white-space:nowrap;}
+  .row button{background:transparent; border:1px solid var(--cream-dim); color:var(--cream); padding:7px 12px; border-radius:2px; cursor:pointer; font-size:0.78rem; white-space:nowrap;}
+  .row button.danger{border-color:var(--red); color:#e88a76;}
+  .row button.addons{border-color:var(--brass); color:var(--brass);}
+  .row .actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  .hidden{display:none;}
+
+  .pagenav{position:sticky; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 5vw; z-index:50; background:var(--espresso); border-bottom:1px solid rgba(201,154,68,0.2);}
+  .pagenav .logo{font-family:'Fraunces',serif; font-size:0.95rem; letter-spacing:0.06em; text-transform:uppercase;}
+  .pagenav .links{display:flex; gap:18px; font-size:0.74rem; letter-spacing:0.04em; text-transform:uppercase;}
+  .pagenav .links a{color:var(--cream-dim); text-decoration:none; opacity:0.8;}
+  .pagenav .links a:hover{opacity:1; color:var(--cream);}
+
+  /* add-ons modal */
+  .addon-modal{position:fixed; inset:0; background:rgba(20,12,8,0.7); display:none; align-items:center; justify-content:center; z-index:90; padding:18px;}
+  .addon-modal.show{display:flex;}
+  .addon-box{background:var(--espresso-2); border:1px solid rgba(201,154,68,0.3); border-radius:8px; padding:26px; width:100%; max-width:460px; max-height:88vh; overflow:auto;}
+  .addon-box h3{font-family:'Fraunces',serif; margin:0 0 4px; color:var(--brass);}
+  .addon-box .sub{font-size:0.82rem; color:var(--cream-dim); margin-bottom:16px;}
+  .addon-line{display:flex; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(205,191,168,0.15);}
+  .addon-line .nm{flex:1;}
+  .addon-line .pr{width:90px;}
+  .addon-line button{background:transparent; border:1px solid var(--red); color:#e88a76; border-radius:2px; padding:6px 10px; cursor:pointer; font-size:0.75rem;}
+  .addon-new{display:flex; gap:10px; margin-top:16px;}
+  .addon-new .nm{flex:1;}
+  .addon-new .pr{width:100px;}
+  .addon-new button{background:var(--brass); color:var(--espresso); border:none; padding:0 16px; border-radius:2px; cursor:pointer; font-weight:600;}
+</style>
+</head>
+<body>
+
+<nav class="pagenav">
+  <div class="logo">Amber & Ash</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order</a>
+    <a href="booking.html">Book</a>
+    <a href="staff.html">Staff</a>
+  </div>
+</nav>
+
+<div class="gate" id="gate">
+  <h2>Admin sign in</h2>
+  <div class="form-row full" style="margin-bottom:12px;">
+    <label>Email</label>
+    <input id="email" type="email" placeholder="you@amberandash.com" autocomplete="email">
+  </div>
+  <div class="form-row full" style="margin-bottom:0;">
+    <label>Password</label>
+    <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button id="loginBtn">Sign in</button>
+  <div class="msg" id="gateMsg"></div>
+</div>
+
+<div id="manager" class="hidden">
+  <header><div class="logo">Amber & Ash — Menu Manager</div><button class="logout" id="logoutBtn">Log out</button></header>
+
+  <main>
+    <div class="add-card">
+      <h2 id="formTitle">Add a new item</h2>
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div><label>Item name</label><input id="fName" placeholder="e.g. Cardamom Bun"></div>
+        <div><label>Category</label><input id="fCategory" placeholder="e.g. Bakery" list="catList"><datalist id="catList"></datalist></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Description (optional)</label><textarea id="fDesc" placeholder="One short line customers will see"></textarea></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Image URL (optional)</label><input id="fImage" placeholder="https://… or assets/my-latte.jpg"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Price (₹)</label><input id="fPrice" type="number" min="0" step="1" placeholder="220"></div>
+        <div><label>Available to order</label>
+          <select id="fAvailable"><option value="true">Yes</option><option value="false">No</option></select>
+        </div>
+      </div>
+      <button class="save-btn" id="saveBtn">Add item</button>
+      <button class="save-btn" id="cancelBtn" style="background:transparent; border:1px solid var(--cream-dim); color:var(--cream); display:none; margin-left:10px;">Cancel edit</button>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+    <div class="list">
+      <h2>Current menu</h2>
+      <div id="itemsList"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Add-ons editor -->
+<div class="addon-modal" id="addonModal">
+  <div class="addon-box">
+    <h3 id="addonItemName">Add-ons</h3>
+    <div class="sub">What can customers add to this item? (e.g. extra shot, oat milk)</div>
+    <div id="addonList"></div>
+    <div class="addon-new">
+      <input class="nm" id="newAddonName" placeholder="Add-on name">
+      <input class="pr" id="newAddonPrice" type="number" min="0" step="1" placeholder="₹ (0 = free)">
+      <button id="newAddonBtn">Add</button>
+    </div>
+    <div style="text-align:right; margin-top:18px;">
+      <button class="save-btn" id="addonClose" style="padding:9px 18px;">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+
+/* ---------- AUTH GATE ---------- */
+const gate = document.getElementById('gate');
+const gateMsg = document.getElementById('gateMsg');
+const manager = document.getElementById('manager');
+
+async function isAdmin() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase.from('admins').select('id').eq('id', user.id).single();
+  return !!data;
+}
+
+async function showManagerIfAllowed() {
+  if (await isAdmin()) {
+    gate.classList.add('hidden');
+    manager.classList.remove('hidden');
+    loadItems();
+  }
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  gateMsg.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { gateMsg.textContent = 'Sign in failed: ' + error.message; return; }
+  if (await isAdmin()) {
+    gate.classList.add('hidden');
+    manager.classList.remove('hidden');
+    loadItems();
+  } else {
+    gateMsg.textContent = 'This account is not an approved admin.';
+    await supabase.auth.signOut();
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  manager.classList.add('hidden');
+  gate.classList.remove('hidden');
+  document.getElementById('password').value = '';
+});
+
+supabase.auth.onAuthStateChange(() => showManagerIfAllowed());
+showManagerIfAllowed();
+
+/* ---------- MENU MANAGER ---------- */
+const itemsList = document.getElementById('itemsList');
+const statusMsg = document.getElementById('statusMsg');
+const saveBtn = document.getElementById('saveBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const formTitle = document.getElementById('formTitle');
+
+function showStatus(msg, ok = true) {
+  statusMsg.textContent = msg;
+  statusMsg.className = `status-msg ${ok ? 'ok' : 'err'}`;
+  setTimeout(() => { statusMsg.textContent = ''; }, 3000);
+}
+
+function clearForm() {
+  document.getElementById('editId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fCategory').value = '';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fImage').value = '';
+  document.getElementById('fPrice').value = '';
+  document.getElementById('fAvailable').value = 'true';
+  formTitle.textContent = 'Add a new item';
+  saveBtn.textContent = 'Add item';
+  cancelBtn.style.display = 'none';
+}
+
+async function loadItems() {
+  const to = (p, ms = 10000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('Menu request timed out')), ms))]);
+  let items, error;
+  try {
+    const r = await to(supabase.from('menu_items').select('*').order('category').order('sort_order'));
+    items = r.data; error = r.error;
+  } catch (e) { error = e; }
+  if (error) { console.error('Admin menu load failed:', error); showStatus('Could not load menu: ' + (error.message || error), false); return; }
+
+  const cats = [...new Set(items.map(i => i.category))];
+  document.getElementById('catList').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+
+  itemsList.innerHTML = items.map(item => `
+    <div class="row ${item.is_available ? '' : 'unavailable'}">
+      <div class="info">
+        <div class="name">${item.name} <span style="color:var(--cream-dim); font-weight:400;">— ${item.category}</span></div>
+        <div class="meta">${item.description ?? ''}</div>
+      </div>
+      <div class="price">₹${item.price}</div>
+      <div class="actions">
+        <button data-action="toggle" data-id="${item.id}" data-available="${item.is_available}">${item.is_available ? 'Hide' : 'Show'}</button>
+        <button data-action="edit" data-id="${item.id}">Edit</button>
+        <button class="addons" data-action="addons" data-id="${item.id}" data-name="${item.name}">Add-ons</button>
+        <button class="danger" data-action="delete" data-id="${item.id}">Delete</button>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--cream-dim);">No items yet — add your first one above.</p>';
+
+  itemsList.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => handleAction(btn, items));
+  });
+}
+
+async function handleAction(btn, items) {
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  const item = items.find(i => i.id === id);
+
+  if (action === 'toggle') {
+    await supabase.from('menu_items').update({ is_available: !item.is_available }).eq('id', id);
+    loadItems();
+  }
+  if (action === 'delete') {
+    if (!confirm(`Delete "${item.name}"? This can't be undone.`)) return;
+    await supabase.from('menu_items').delete().eq('id', id);
+    showStatus('Item deleted.');
+    loadItems();
+  }
+  if (action === 'edit') {
+    document.getElementById('editId').value = item.id;
+    document.getElementById('fName').value = item.name;
+    document.getElementById('fCategory').value = item.category;
+    document.getElementById('fDesc').value = item.description ?? '';
+    document.getElementById('fImage').value = item.image_url ?? '';
+    document.getElementById('fPrice').value = item.price;
+    document.getElementById('fAvailable').value = String(item.is_available);
+    formTitle.textContent = `Editing "${item.name}"`;
+    saveBtn.textContent = 'Save changes';
+    cancelBtn.style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (action === 'addons') {
+    openAddonEditor(id, btn.dataset.name);
+  }
+}
+
+saveBtn.addEventListener('click', async () => {
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('fName').value.trim();
+  const category = document.getElementById('fCategory').value.trim();
+  const description = document.getElementById('fDesc').value.trim();
+  const image_url = document.getElementById('fImage').value.trim();
+  const price = parseFloat(document.getElementById('fPrice').value);
+  const is_available = document.getElementById('fAvailable').value === 'true';
+
+  if (!name || !category || isNaN(price)) {
+    showStatus('Please fill in name, category, and a valid price.', false);
+    return;
+  }
+
+  const payload = { name, category, description, image_url: image_url || null, price, is_available };
+  const { error } = id
+    ? await supabase.from('menu_items').update(payload).eq('id', id)
+    : await supabase.from('menu_items').insert(payload);
+
+  if (error) { showStatus('Something went wrong: ' + error.message, false); return; }
+  showStatus(id ? 'Item updated.' : 'Item added to the menu.');
+  clearForm();
+  loadItems();
+});
+
+cancelBtn.addEventListener('click', clearForm);
+
+/* ---------- ADD-ONS EDITOR ---------- */
+const addonModal = document.getElementById('addonModal');
+const addonList = document.getElementById('addonList');
+const addonItemName = document.getElementById('addonItemName');
+let currentItemId = null;
+
+async function openAddonEditor(itemId, itemName) {
+  currentItemId = itemId;
+  addonItemName.textContent = 'Add-ons for ' + itemName;
+  await renderAddons(itemId);
+  addonModal.classList.add('show');
+}
+
+async function renderAddons(itemId) {
+  const { data: addons, error } = await supabase
+    .from('menu_addons').select('*').eq('menu_item_id', itemId).order('sort_order');
+  if (error) { console.error(error); return; }
+  addonList.innerHTML = (addons || []).map(a => `
+    <div class="addon-line">
+      <input class="nm" data-id="${a.id}" value="${a.name}" onchange="window.__updAddonName && window.__updAddonName(this)">
+      <input class="pr" type="number" min="0" data-id="${a.id}" value="${a.price}" onchange="window.__updAddonPrice && window.__updAddonPrice(this)">
+      <button data-del="${a.id}">Remove</button>
+    </div>`).join('') || '<p style="color:var(--cream-dim); margin:0 0 8px;">No add-ons yet.</p>';
+
+  addonList.querySelectorAll('button[data-del]').forEach(b => {
+    b.addEventListener('click', async () => {
+      await supabase.from('menu_addons').delete().eq('id', b.dataset.del);
+      renderAddons(currentItemId);
+    });
+  });
+}
+
+window.__updAddonName = async (el) => {
+  await supabase.from('menu_addons').update({ name: el.value }).eq('id', el.dataset.id);
+};
+window.__updAddonPrice = async (el) => {
+  await supabase.from('menu_addons').update({ price: parseFloat(el.value) || 0 }).eq('id', el.dataset.id);
+};
+
+document.getElementById('newAddonBtn').addEventListener('click', async () => {
+  const nm = document.getElementById('newAddonName').value.trim();
+  const pr = parseFloat(document.getElementById('newAddonPrice').value) || 0;
+  if (!nm) return;
+  await supabase.from('menu_addons').insert({ menu_item_id: currentItemId, name: nm, price: pr });
+  document.getElementById('newAddonName').value = '';
+  document.getElementById('newAddonPrice').value = '';
+  renderAddons(currentItemId);
+});
+
+document.getElementById('addonClose').addEventListener('click', () => addonModal.classList.remove('show'));
+addonModal.addEventListener('click', e => { if (e.target === addonModal) addonModal.classList.remove('show'); });
+</script>
+</body>
+</html>

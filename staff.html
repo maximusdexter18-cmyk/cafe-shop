@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Dashboard — Amber & Ash</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --espresso:#ffffff; --espresso-2:#f4f4f4; --cream:#1a1a1a; --cream-dim:#6b6b6b; --brass:#E31837; --red:#E31837; --green:#5f6f52; --blue:#006491; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--espresso); color:var(--cream); font-family:'Inter',sans-serif; min-height:100vh;}
+
+  /* shared cross-page nav (unobtrusive) */
+  .pagenav{position:sticky; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 5vw; z-index:50; background:var(--espresso); border-bottom:1px solid rgba(201,154,68,0.2);}
+  .pagenav .logo{font-family:'Fraunces',serif; font-size:0.95rem; letter-spacing:0.06em; text-transform:uppercase;}
+  .pagenav .links{display:flex; gap:18px; font-size:0.74rem; letter-spacing:0.04em; text-transform:uppercase;}
+  .pagenav .links a{color:var(--cream-dim); text-decoration:none; opacity:0.8;}
+  .pagenav .links a:hover{opacity:1; color:var(--cream);}
+
+  /* login gate */
+  .gate{max-width:360px; margin:14vh auto 0; background:var(--espresso-2); border:1px solid rgba(201,154,68,0.25); border-radius:8px; padding:30px;}
+  .gate h2{font-family:'Fraunces',serif; color:var(--brass); margin-bottom:16px; font-size:1.3rem;}
+  label{font-size:0.78rem; color:var(--cream-dim); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em;}
+  input{width:100%; background:var(--espresso); border:1px solid rgba(205,191,168,0.3); color:var(--cream); padding:10px 12px; border-radius:3px; font-family:inherit; font-size:0.92rem; box-sizing:border-box;}
+  .gate button{margin-top:16px; width:100%; background:var(--brass); color:var(--espresso); border:none; padding:12px; border-radius:2px; font-weight:600; cursor:pointer; font-size:0.95rem;}
+  .gate .msg{font-size:0.82rem; margin-top:12px; min-height:16px; color:#e88a76;}
+
+  #app{display:none;}
+  #app.show{display:block;}
+
+  header{display:flex; justify-content:space-between; align-items:center; padding:22px 32px; border-bottom:1px solid rgba(201,154,68,0.2);}
+  header .logo{font-family:'Fraunces',serif; font-size:1.2rem;}
+  header .right{display:flex; align-items:center; gap:16px;}
+  header .who{font-size:0.82rem; color:var(--cream-dim);}
+  header .logout{background:transparent; border:1px solid var(--cream-dim); color:var(--cream); padding:8px 14px; border-radius:2px; cursor:pointer; font-size:0.8rem;}
+  .tabs{display:flex; gap:8px;}
+  .tabs button{background:transparent; border:1px solid var(--cream-dim); color:var(--cream); padding:9px 18px; border-radius:2px; cursor:pointer; font-size:0.85rem;}
+  .tabs button.active{background:var(--brass); color:var(--espresso); border-color:var(--brass); font-weight:600;}
+
+  main{padding:28px 32px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:20px;}
+  .order-card{background:var(--espresso-2); border:1px solid rgba(201,154,68,0.25); border-radius:6px; padding:20px;}
+  .order-card .table-num{font-family:'Fraunces',serif; font-size:1.3rem; color:var(--brass);}
+  .order-card .time{font-size:0.75rem; color:var(--cream-dim); margin-top:2px;}
+  .order-card ul{list-style:none; padding:0; margin:16px 0 0;}
+  .order-card li{display:flex; justify-content:space-between; padding:6px 0; font-size:0.92rem; border-bottom:1px dashed rgba(205,191,168,0.15);}
+  .order-card .qty-badge{color:var(--brass); margin-right:8px;}
+  .order-card .complete-btn{margin-top:16px; width:100%; background:var(--green); color:var(--cream); border:none; padding:11px; border-radius:2px; cursor:pointer; font-weight:600;}
+  .empty{color:var(--cream-dim); text-align:center; padding:60px 0; grid-column:1/-1;}
+  .history-row{display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(205,191,168,0.12);}
+  .history-row .meta{color:var(--cream-dim); font-size:0.82rem;}
+</style>
+</head>
+<body>
+
+<nav class="pagenav">
+  <div class="logo">Amber & Ash</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order</a>
+    <a href="booking.html">Book</a>
+  </div>
+</nav>
+
+<!-- Login gate: only approved staff may pass -->
+<div class="gate" id="gate">
+  <h2>Staff sign in</h2>
+  <label for="email">Email</label>
+  <input id="email" type="email" placeholder="staff@amberandash.cafe" autocomplete="email">
+  <label for="password" style="margin-top:12px;">Password</label>
+  <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+  <button id="loginBtn">Sign in</button>
+  <div class="msg" id="gateMsg"></div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">Amber & Ash — Staff</div>
+    <div class="right">
+      <span class="who" id="who"></span>
+      <button class="logout" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+  <div style="padding:18px 32px 0;">
+    <div class="tabs">
+      <button class="active" id="tabActive">Active orders</button>
+      <button id="tabHistory">History</button>
+    </div>
+  </div>
+  <main>
+    <div class="grid" id="activeGrid"></div>
+    <div id="historyList" style="display:none; max-width:700px;"></div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+
+const gate = document.getElementById('gate');
+const gateMsg = document.getElementById('gateMsg');
+const app = document.getElementById('app');
+
+async function isStaff() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase.from('staff').select('id').eq('id', user.id).single();
+  return !!data;
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  gateMsg.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { gateMsg.textContent = 'Sign in failed: ' + error.message; return; }
+  if (await isStaff()) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: me } = await supabase.from('staff').select('name, email').eq('id', user.id).single();
+    document.getElementById('who').textContent = me?.name || me?.email || 'Staff';
+    gate.style.display = 'none';
+    app.classList.add('show');
+    initDashboard();
+  } else {
+    gateMsg.textContent = 'This account is not staff.';
+    await supabase.auth.signOut();
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  app.classList.remove('show');
+  gate.style.display = 'block';
+  document.getElementById('password').value = '';
+});
+
+// If already signed in as staff (e.g. refreshed session), skip the gate.
+supabase.auth.onAuthStateChange(async () => {
+  if (await isStaff()) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: me } = await supabase.from('staff').select('name, email').eq('id', user.id).single();
+    document.getElementById('who').textContent = me?.name || me?.email || 'Staff';
+    gate.style.display = 'none';
+    app.classList.add('show');
+    initDashboard();
+  }
+});
+(async function alreadyStaff() {
+  if (await isStaff()) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: me } = await supabase.from('staff').select('name, email').eq('id', user.id).single();
+    document.getElementById('who').textContent = me?.name || me?.email || 'Staff';
+    gate.style.display = 'none';
+    app.classList.add('show');
+    initDashboard();
+  }
+})();
+
+const activeGrid = document.getElementById('activeGrid');
+const historyList = document.getElementById('historyList');
+const tabActive = document.getElementById('tabActive');
+const tabHistory = document.getElementById('tabHistory');
+
+function initDashboard() {
+  tabActive.onclick = () => { tabActive.classList.add('active'); tabHistory.classList.remove('active'); activeGrid.style.display='grid'; historyList.style.display='none'; loadActive(); };
+  tabHistory.onclick = () => { tabHistory.classList.add('active'); tabActive.classList.remove('active'); activeGrid.style.display='none'; historyList.style.display='block'; loadHistory(); };
+
+  // live updates: any change to orders refreshes whichever tab is open
+  supabase
+    .channel('orders-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+      if (activeGrid.style.display !== 'none') loadActive(); else loadHistory();
+    })
+    .subscribe();
+
+  loadActive();
+}
+
+function timeAgo(dateStr) {
+  const mins = Math.floor((Date.now() - new Date(dateStr)) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins === 1) return '1 min ago';
+  return `${mins} mins ago`;
+}
+
+async function loadActive() {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('id, created_at, table_id, tables(table_number), order_items(item_name, item_price, quantity, addons)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+
+  activeGrid.innerHTML = '';
+  if (!orders.length) { activeGrid.innerHTML = '<div class="empty">No active orders right now.</div>'; return; }
+
+  orders.forEach(order => {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    const itemsHtml = order.order_items.map(it => {
+      const addons = (it.addons || []).map(a => a.name).join(', ');
+      return `<li>
+        <div>
+          <span class="qty-badge">${it.quantity}×</span>${it.item_name}
+          ${addons ? `<div style="font-size:0.78rem; color:var(--cream-dim); margin-top:2px;">+ ${addons}</div>` : ''}
+        </div>
+        <span>₹${it.item_price * it.quantity}</span>
+      </li>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="table-num">Table ${order.tables.table_number}</div>
+      <div class="time">${timeAgo(order.created_at)}</div>
+      <ul>${itemsHtml}</ul>
+      <button class="complete-btn" data-id="${order.id}">Mark completed</button>
+    `;
+    card.querySelector('.complete-btn').addEventListener('click', async () => {
+      await supabase.from('orders').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', order.id);
+      loadActive();
+    });
+    activeGrid.appendChild(card);
+  });
+}
+
+async function loadHistory() {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('id, created_at, completed_at, tables(table_number), order_items(item_name, item_price, quantity)')
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); return; }
+
+  historyList.innerHTML = orders.map(o => {
+    const total = o.order_items.reduce((s, it) => s + it.item_price * it.quantity, 0);
+    const itemNames = o.order_items.map(it => `${it.quantity}× ${it.item_name}`).join(', ');
+    return `<div class="history-row">
+      <div>
+        <div><b>Table ${o.tables.table_number}</b> — ${itemNames}</div>
+        <div class="meta">Completed ${new Date(o.completed_at).toLocaleString()}</div>
+      </div>
+      <div>₹${total}</div>
+    </div>`;
+  }).join('') || '<div class="empty">No completed orders yet.</div>';
+}
+</script>
+</body>
+</html>

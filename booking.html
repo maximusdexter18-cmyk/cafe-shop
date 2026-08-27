@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a table — Amber & Ash</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#E31837; --red-dk:#B3122B; --blue:#006491; --ink:#1a1a1a; --paper:#ffffff;
+    --muted:#6b6b6b; --line:#e6e6e6; --chip:#f4f4f4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-weight:800; letter-spacing:-0.02em;}
+
+  nav{position:sticky; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 6vw; z-index:60; background:#fff; border-bottom:1px solid var(--line);}
+  nav .logo{font-weight:800; font-size:1.2rem; color:var(--red); text-transform:uppercase; letter-spacing:-0.02em;}
+  nav .links{display:flex; gap:22px; font-weight:700; font-size:0.78rem; text-transform:uppercase;}
+  nav .links a{color:var(--ink); text-decoration:none;}
+  nav .links a:hover{color:var(--red);}
+
+  .wrap{max-width:760px; margin:0 auto; padding:60px 6vw 8vh;}
+  .eyebrow{display:inline-block; background:var(--chip); color:var(--red); font-weight:800; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem; padding:7px 14px; border-radius:30px; margin-bottom:14px;}
+  h1{font-size:clamp(2rem,5vw,3rem); line-height:1.05; margin-bottom:14px;}
+  .lede{color:var(--muted); line-height:1.7; margin-bottom:34px; max-width:54ch;}
+
+  form{background:#fff; border:1px solid var(--line); border-radius:18px; padding:28px; box-shadow:0 16px 40px rgba(0,0,0,0.06);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .field{margin-bottom:14px;}
+  label{display:block; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin-bottom:7px;}
+  input{width:100%; background:#fff; border:1px solid var(--line); color:var(--ink); padding:12px 13px; border-radius:10px; font-family:inherit; font-size:0.95rem;}
+  input:focus{outline:none; border-color:var(--red);}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:10px; background:var(--red); color:#fff; font-weight:800; font-size:0.9rem; letter-spacing:0.02em; text-transform:uppercase; padding:15px 26px; border-radius:40px; text-decoration:none; border:none; cursor:pointer; position:relative; overflow:hidden;}
+  .btn.outline{background:#fff; color:var(--blue); border:2px solid var(--blue);}
+  .btn:hover{filter:brightness(1.06);}
+  .btn:disabled{opacity:0.45; cursor:not-allowed; filter:none;}
+  .btn::after{content:''; position:absolute; inset:0; border-radius:40px; padding:2px; background:conic-gradient(from 0deg, transparent, rgba(255,255,255,0.9), transparent 40%); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .3s;}
+  .btn:hover::after{opacity:1; animation:spinBorder 2.4s linear infinite;}
+  @keyframes spinBorder{to{--ang:360deg;}}
+  .submit-row{margin-top:8px;} .submit-row .btn{width:100%;}
+
+  .msg{margin-top:18px; padding:14px 16px; border-radius:12px; font-size:0.9rem; line-height:1.5; display:none;}
+  .msg.show{display:block;}
+  .msg.err{background:rgba(227,24,55,0.10); border:1px solid var(--red); color:var(--red-dk);}
+  .msg.ok{background:rgba(0,100,145,0.10); border:1px solid var(--blue); color:var(--blue);}
+  .msg.info{background:var(--chip); border:1px solid var(--line); color:var(--ink);}
+
+  .results{margin-top:36px;}
+  .results h2{font-size:1.3rem; margin-bottom:18px; color:var(--red);}
+  .table-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; box-shadow:0 10px 26px rgba(0,0,0,0.05);}
+  .table-card .info .name{font-weight:800; font-size:1.25rem; color:var(--red);}
+  .table-card .info .seats{font-size:0.85rem; color:var(--muted); margin-top:3px;}
+  .none-found{color:var(--muted); line-height:1.7; padding:24px; border:1px dashed var(--line); border-radius:16px;}
+  .none-found a{color:var(--red); font-weight:700;}
+
+  .booked{text-align:center; padding:30px 0;}
+  .booked h2{font-size:1.9rem; margin-bottom:12px;}
+  .booked p{color:var(--muted); line-height:1.7;}
+
+  @property --ang{syntax:'<angle>'; inherits:false; initial-value:0deg;}
+  @media (max-width:640px){ .grid2{grid-template-columns:1fr;} nav .links{display:none;} }
+  @media (prefers-reduced-motion: reduce){ .btn::after{display:none;} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Amber & Ash</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="eyebrow">Plan ahead</span>
+  <h1>Book a table</h1>
+  <p class="lede">Tell us when you're coming and how many of you there are. We'll check which tables are free for your whole visit and — thanks to a lock at the database level — never double-book.</p>
+
+  <form id="bookingForm">
+    <div class="grid2">
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" type="text" placeholder="e.g. Mara" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone" type="tel" placeholder="+91 …" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label for="party">Party size</label>
+        <input id="party" type="number" min="1" max="50" value="2" required>
+      </div>
+      <div class="field">
+        <label for="date">Date</label>
+        <input id="date" type="date" required>
+      </div>
+      <div class="field">
+        <label for="arrival">Arrival time</label>
+        <input id="arrival" type="time" value="19:00" required>
+      </div>
+      <div class="field">
+        <label for="leaving">Leaving time</label>
+        <input id="leaving" type="time" value="20:30" required>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn" id="checkBtn" type="submit">Check availability</button>
+    </div>
+
+    <div class="msg" id="formMsg"></div>
+  </form>
+
+  <div class="results" id="results" style="display:none;">
+    <h2 id="resultsHeading"></h2>
+    <div id="tableList"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script src="footer.js"></script>
+<script>
+
+const form = document.getElementById('bookingForm');
+const formMsg = document.getElementById('formMsg');
+const results = document.getElementById('results');
+const resultsHeading = document.getElementById('resultsHeading');
+const tableList = document.getElementById('tableList');
+const checkBtn = document.getElementById('checkBtn');
+
+document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+
+function showMsg(el, text, kind) {
+  el.textContent = text;
+  el.className = `msg show ${kind}`;
+}
+function hideMsg(el) { el.className = 'msg'; }
+
+function toTimestamptz(dateStr, timeStr) {
+  const d = new Date(`${dateStr}T${timeStr}`);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+function fmtNicely(dateStr, timeStr) {
+  const d = new Date(`${dateStr}T${timeStr}`);
+  return d.toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideMsg(formMsg);
+  results.style.display = 'none';
+
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const party = parseInt(document.getElementById('party').value, 10);
+  const date = document.getElementById('date').value;
+  const arrival = document.getElementById('arrival').value;
+  const leaving = document.getElementById('leaving').value;
+
+  if (!name) return showMsg(formMsg, 'Please add your name so we know who to expect.', 'err');
+  if (!party || party < 1) return showMsg(formMsg, 'Party size must be at least 1.', 'err');
+  if (!date || !arrival || !leaving) return showMsg(formMsg, 'Please choose a date, arrival, and leaving time.', 'err');
+
+  const arrivalAt = toTimestamptz(date, arrival);
+  const leavingAt = toTimestamptz(date, leaving);
+  if (!arrivalAt || !leavingAt) return showMsg(formMsg, 'That date or time is not valid.', 'err');
+  if (new Date(leavingAt) <= new Date(arrivalAt)) return showMsg(formMsg, 'Leaving time must be after arrival time.', 'err');
+
+  checkBtn.disabled = true;
+  checkBtn.textContent = 'Checking…';
+
+  try {
+    const { data: tables, error: tErr } = await supabase
+      .from('tables')
+      .select('id, table_number, seats')
+      .gte('seats', party)
+      .order('seats', { ascending: true })
+      .order('table_number', { ascending: true });
+    if (tErr) throw tErr;
+    if (!tables.length) {
+      showMsg(formMsg, `Sorry — we don't have a table that seats ${party}. Try a smaller party.`, 'err');
+      return;
+    }
+
+    const tableIds = tables.map(t => t.id);
+    const to = (p, ms = 10000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('Request timed out')), ms))]);
+    let conflicts = [], bErr = null;
+    try {
+      const r = await to(supabase
+        .from('bookings')
+        .select('table_id')
+        .eq('status', 'confirmed')
+        .in('table_id', tableIds)
+        .lt('arrival_at', leavingAt)
+        .gte('leaving_at', arrivalAt));
+      conflicts = r.data || []; bErr = r.error;
+    } catch (e) { bErr = e; }
+    if (bErr) {
+      console.error('Availability check failed:', bErr);
+      showMsg(formMsg, 'We couldn\'t check availability just now — please refresh and try again.', 'err');
+      return;
+    }
+
+    const busyIds = new Set(conflicts.map(c => c.table_id));
+    const free = tables.filter(t => !busyIds.has(t.id));
+
+    resultsHeading.textContent = free.length
+      ? `Free tables for ${fmtNicely(date, arrival)} – ${leaving}`
+      : 'No tables free for that window';
+    tableList.innerHTML = '';
+
+    if (!free.length) {
+      tableList.innerHTML = `<div class="none-found">
+        Sorry, every table big enough for ${party} guests is booked then.
+        <br>Try a different time — earlier or later in the day usually opens something up.
+        <br><a href="#" id="retryLink">Search again</a>
+      </div>`;
+      document.getElementById('retryLink').addEventListener('click', (ev) => {
+        ev.preventDefault();
+        results.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    } else {
+      free.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'table-card';
+        card.innerHTML = `
+          <div class="info">
+            <div class="name">Table ${t.table_number}</div>
+            <div class="seats">Seats ${t.seats} · comfortably fits your party of ${party}</div>
+          </div>
+          <button class="btn book-btn" data-id="${t.id}" data-number="${t.table_number}">Book this table</button>
+        `;
+        tableList.appendChild(card);
+      });
+
+      tableList.querySelectorAll('.book-btn').forEach(btn => {
+        btn.addEventListener('click', () => confirmBooking({
+          tableId: btn.dataset.id,
+          tableNumber: btn.dataset.number,
+          name, phone, party, arrivalAt, leavingAt,
+        }, btn));
+      });
+    }
+    results.style.display = 'block';
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error(err);
+    showMsg(formMsg, 'We couldn\'t check availability right now. Please try again.', 'err');
+  } finally {
+    checkBtn.disabled = false;
+    checkBtn.textContent = 'Check availability';
+  }
+});
+
+async function confirmBooking(details, btn) {
+  hideMsg(formMsg);
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Reserving…';
+
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert({
+        table_id: details.tableId,
+        customer_name: details.name,
+        phone: details.phone || null,
+        party_size: details.party,
+        arrival_at: details.arrivalAt,
+        leaving_at: details.leavingAt,
+        status: 'confirmed',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    document.querySelector('.wrap').innerHTML = `
+      <div class="booked">
+        <span class="eyebrow">You're booked</span>
+        <h2>See you soon, ${escapeHtml(details.name)}.</h2>
+        <p>Table ${details.tableNumber} is reserved for <b>${details.party}</b> from
+        <b>${fmtNicely(new Date(details.arrivalAt).toISOString().slice(0,10), details.arrivalAt.slice(11,16))}</b>
+        to <b>${details.leavingAt.slice(11,16)}</b>.</p>
+        <p style="margin-top:18px;"><a href="index.html" class="btn">Back to home</a></p>
+      </div>`;
+  } catch (err) {
+    const code = err?.code || err?.error?.code;
+    const isConflict =
+      code === '23514' || code === '23P01' ||
+      /exclusion|overlap|no_overlapping_bookings/i.test(err?.message || '');
+
+    if (isConflict) {
+      showMsg(formMsg, 'That table was just booked, please pick another.', 'err');
+      btn.closest('.table-card')?.remove();
+      if (!tableList.querySelector('.book-btn')) {
+        resultsHeading.textContent = 'No tables free for that window';
+        tableList.innerHTML = `<div class="none-found">
+          That slot just filled up. <a href="#" id="retryLink2">Try another time</a>.
+        </div>`;
+        document.getElementById('retryLink2')?.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          results.style.display = 'none';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    } else {
+      console.error(err);
+      showMsg(formMsg, 'We couldn\'t complete the booking just now. Please try again.', 'err');
+    }
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+function escapeHtml(s) {
+  const map = { 38: 'amp', 60: 'lt', 62: 'gt', 34: 'quot', 39: '#39' };
+  return s.replace(/[&<>"']/g, c => '&' + map[c.charCodeAt(0)] + ';');
+}
+
+renderFooter();
+</script>
+</body>
+</html>

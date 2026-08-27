@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order — Amber & Ash</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#E31837; --red-dk:#B3122B; --blue:#006491; --ink:#1a1a1a; --paper:#ffffff;
+    --muted:#6b6b6b; --line:#e6e6e6; --chip:#f4f4f4;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;}
+
+  nav{position:sticky; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 5vw; z-index:60; background:#fff; border-bottom:1px solid var(--line);}
+  nav .logo{font-weight:800; font-size:1.2rem; color:var(--red); text-transform:uppercase; letter-spacing:-0.02em;}
+  nav .links{display:flex; gap:22px; font-weight:700; font-size:0.78rem; text-transform:uppercase;}
+  nav .links a{color:var(--ink); text-decoration:none;}
+  nav .links a:hover{color:var(--red);}
+
+  #app{min-height:100vh; background:var(--paper);}
+  #app.paper{background:var(--paper);}
+
+  header{padding:34px 20px 6px; text-align:center;}
+  header .logo{font-weight:800; font-size:1.7rem; color:var(--ink); letter-spacing:-0.02em;}
+  header .table-tag{margin-top:6px; font-size:0.8rem; color:var(--red); letter-spacing:0.08em; text-transform:uppercase; font-weight:800;}
+  .timer{margin-top:6px; font-size:0.82rem; color:var(--muted); font-weight:600;}
+  .timer.low{color:var(--red);}
+
+  main{max-width:760px; margin:0 auto; padding:22px 18px 150px;}
+  .category{margin-top:34px;}
+  .category h2{font-weight:800; font-size:1.4rem; margin-bottom:14px; color:var(--red); padding-bottom:8px; border-bottom:2px solid var(--line);}
+  .item{display:flex; gap:16px; align-items:center; background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; transition:box-shadow .25s ease, transform .25s ease;}
+  .item:hover{box-shadow:0 14px 30px rgba(0,0,0,0.08); transform:translateY(-3px);}
+  .item .thumb{width:72px; height:72px; border-radius:12px; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.6rem; flex:0 0 auto; overflow:hidden;}
+  .item .thumb img{width:100%; height:100%; object-fit:cover;}
+  .item .body{flex:1;}
+  .item .name{font-weight:800; font-size:1.05rem;}
+  .item .desc{font-size:0.84rem; color:var(--muted); margin-top:3px; line-height:1.45;}
+  .item .price{font-weight:800; color:var(--red); white-space:nowrap; font-size:1.05rem; margin-top:4px;}
+  .order-btn{margin-top:10px; background:var(--red); color:#fff; border:none; padding:9px 18px; border-radius:30px; font-weight:800; cursor:pointer; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.03em;}
+  .order-btn:hover{background:var(--red-dk);}
+
+  /* modal */
+  .modal-back{position:fixed; inset:0; background:rgba(26,26,26,0.55); display:none; align-items:center; justify-content:center; z-index:80; padding:18px;}
+  .modal-back.show{display:flex;}
+  .modal{background:#fff; width:100%; max-width:440px; border-radius:18px; padding:26px; max-height:90vh; overflow:auto; box-shadow:0 24px 60px rgba(0,0,0,0.35);}
+  .modal h3{font-weight:800; font-size:1.5rem; margin-bottom:4px;}
+  .modal .m-price{color:var(--red); font-weight:800; margin-bottom:14px;}
+  .modal .m-desc{font-size:0.9rem; color:var(--muted); line-height:1.5; margin-bottom:18px;}
+  .modal .qty-row{display:flex; align-items:center; gap:14px; margin:14px 0;}
+  .modal .qty-row button{width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:1.1rem; cursor:pointer;}
+  .modal .qty-row .q{font-weight:800; font-size:1.3rem; min-width:26px; text-align:center;}
+  .addons-title{font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:800; margin:16px 0 8px;}
+  .addon{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);}
+  .addon label{display:flex; gap:10px; align-items:center; font-size:0.92rem; cursor:pointer; font-weight:600;}
+  .modal .m-total{font-weight:800; font-size:1.3rem; margin:16px 0;}
+  .modal .actions{display:flex; gap:12px;}
+  .modal .add-cart{flex:1; background:var(--red); color:#fff; border:none; padding:14px; border-radius:30px; font-weight:800; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em;}
+  .modal .add-cart:hover{background:var(--red-dk);}
+  .modal .close{background:#fff; border:1px solid var(--line); color:var(--ink); padding:14px 18px; border-radius:30px; cursor:pointer; font-weight:700;}
+
+  .cartbar{position:fixed; bottom:0; left:0; right:0; background:var(--red); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; z-index:70; box-shadow:0 -4px 20px rgba(0,0,0,0.2);}
+  .cartbar .total{font-weight:800; font-size:1.15rem;}
+  .cartbar button{background:#fff; color:var(--red); border:none; padding:14px 24px; font-weight:800; border-radius:30px; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em;}
+  .cartbar button:disabled{opacity:0.5; cursor:not-allowed;}
+
+  .expired, .confirmed{text-align:center; padding:90px 24px; max-width:520px; margin:0 auto;}
+  .expired h1, .confirmed h1{font-weight:800; font-size:1.7rem; margin-bottom:14px; color:var(--ink);}
+  .expired p, .confirmed p{color:var(--muted); line-height:1.6;}
+  .expired button, .confirmed button{margin-top:22px; background:var(--red); color:#fff; border:none; padding:13px 26px; border-radius:30px; font-weight:800; cursor:pointer; text-transform:uppercase;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Amber & Ash</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order</a>
+  </div>
+</nav>
+
+<div id="app">
+  <header>
+    <div class="logo">Amber & Ash</div>
+    <div class="table-tag" id="tableTag">Table —</div>
+    <div class="timer" id="timer"></div>
+  </header>
+
+  <main id="menuArea"></main>
+
+  <div class="expired hidden" id="expiredView">
+    <h1>This order link has expired</h1>
+    <p>For your table's security, each scan is only valid for 10 minutes.<br>Please scan the QR code on your table again to start a new order.</p>
+  </div>
+
+  <div class="confirmed hidden" id="confirmedView">
+    <h1>Order sent ✓</h1>
+    <p>Your order is on its way to the counter for <b id="confirmedTable"></b>.<br>You can place another order until your session expires.</p>
+    <button onclick="location.reload()">Order something else</button>
+  </div>
+</div>
+
+<div class="cartbar" id="cartbar" style="display:none;">
+  <div class="total">₹<span id="cartTotal">0</span></div>
+  <button id="submitBtn" disabled>Send order to counter</button>
+</div>
+
+<div id="site-footer"></div>
+
+<!-- Order popup -->
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script src="footer.js"></script>
+<script>
+
+const params = new URLSearchParams(location.search);
+const tableNumber = parseInt(params.get('table'), 10);
+const menuArea = document.getElementById('menuArea');
+const cartbar = document.getElementById('cartbar');
+const timerEl = document.getElementById('timer');
+const modalBack = document.getElementById('modalBack');
+const modal = document.getElementById('modal');
+
+// cart: menu_item_id -> { item, qty, addons:[{name,price,id}] }
+const cart = {};
+
+if (!tableNumber) {
+  document.getElementById('app').className = '';
+  document.getElementById('app').innerHTML = '<div class="expired"><h1>No table specified</h1><p>Please scan the QR code on your table.</p></div>';
+  throw new Error('no table');
+}
+
+document.getElementById('tableTag').textContent = `Table ${tableNumber}`;
+document.getElementById('app').classList.add('paper');
+
+const SESSION_KEY = `ash_session_table_${tableNumber}`;
+
+async function getOrCreateSession(tableId) {
+  const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  if (saved && new Date(saved.expires_at) > new Date()) return saved;
+  const { data, error } = await supabase
+    .from('table_sessions').insert({ table_id: tableId }).select().single();
+  if (error) { console.error(error); return null; }
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  return data;
+}
+
+function showExpired() {
+  document.getElementById('app').className = '';
+  document.getElementById('menuArea').classList.add('hidden');
+  cartbar.style.display = 'none';
+  document.getElementById('expiredView').classList.remove('hidden');
+}
+
+function startCountdown(expiresAt) {
+  function tick() {
+    const msLeft = new Date(expiresAt) - new Date();
+    if (msLeft <= 0) { showExpired(); clearInterval(int); return; }
+    const m = Math.floor(msLeft / 60000);
+    const s = Math.floor((msLeft % 60000) / 1000).toString().padStart(2, '0');
+    timerEl.textContent = `Session active for ${m}:${s}`;
+    timerEl.classList.toggle('low', msLeft < 90000);
+  }
+  tick();
+  const int = setInterval(tick, 1000);
+}
+
+function lineTotal(entry) {
+  const addonSum = entry.addons.reduce((s, a) => s + (a.price || 0), 0);
+  return (entry.item.price + addonSum) * entry.qty;
+}
+function cartTotal() {
+  return Object.values(cart).reduce((s, e) => s + lineTotal(e), 0);
+}
+function cartCount() {
+  return Object.values(cart).reduce((s, e) => s + e.qty, 0);
+}
+
+function updateCartbar() {
+  const n = cartCount();
+  cartbar.style.display = n ? 'flex' : 'none';
+  document.getElementById('cartTotal').textContent = cartTotal();
+  document.getElementById('submitBtn').disabled = n === 0;
+}
+
+function renderMenu(items, addonsByItem) {
+  const byCategory = {};
+  items.forEach(i => { (byCategory[i.category] ??= []).push(i); });
+
+  menuArea.innerHTML = '';
+  for (const [cat, list] of Object.entries(byCategory)) {
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.innerHTML = `<h2>${cat}</h2>`;
+    list.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'item';
+      const img = item.image_url
+        ? `<img class="thumb" src="${item.image_url}" alt="${item.name}">`
+        : `<div class="thumb">${initials(item.name)}</div>`;
+      const addons = addonsByItem[item.id] || [];
+      row.innerHTML = `
+        ${img}
+        <div class="body">
+          <div class="name">${item.name}</div>
+          <div class="desc">${item.description ?? ''}</div>
+          <div class="price">₹${item.price}${addons.length ? ' · + add-ons' : ''}</div>
+          <button class="order-btn" data-id="${item.id}">Order</button>
+        </div>`;
+      section.appendChild(row);
+    });
+    menuArea.appendChild(section);
+  }
+
+  menuArea.querySelectorAll('.order-btn').forEach(btn => {
+    btn.addEventListener('click', () => openModal(btn.dataset.id, items, addonsByItem));
+  });
+}
+
+function initials(s){ return (s.replace(/[^A-Za-z ]/g,'').trim().charAt(0).toUpperCase()) || '✶'; }
+
+let modalState = null;
+function openModal(id, items, addonsByItem) {
+  const item = items.find(i => i.id === id);
+  const addons = addonsByItem[id] || [];
+  modalState = { item, qty: 1, selected: new Set() };
+  renderModal(addons);
+  modalBack.classList.add('show');
+}
+
+function renderModal(addons) {
+  const { item, qty, selected } = modalState;
+  const addonHtml = addons.length ? `
+    <div class="addons-title">Add-ons (optional)</div>
+    ${addons.map(a => `
+      <div class="addon">
+        <label><input type="checkbox" data-addon="${a.id}" data-name="${a.name}" data-price="${a.price}"> ${a.name}${a.price ? ' (+₹' + a.price + ')' : ''}</label>
+      </div>`).join('')}
+  ` : '';
+
+  modal.innerHTML = `
+    <h3>${item.name}</h3>
+    <div class="m-price">₹${item.price}</div>
+    <div class="m-desc">${item.description ?? ''}</div>
+    <div class="qty-row">
+      <button id="mMinus">−</button>
+      <span class="q" id="mQty">${qty}</span>
+      <button id="mPlus">+</button>
+      <span style="margin-left:auto; font-size:0.8rem; color:var(--muted);">How many?</span>
+    </div>
+    ${addonHtml}
+    <div class="m-total">Total: ₹<span id="mTotal">0</span></div>
+    <div class="actions">
+      <button class="close" id="mClose">Cancel</button>
+      <button class="add-cart" id="mAdd">Add to order</button>
+    </div>`;
+
+  function refreshTotal() {
+    let unit = item.price;
+    selected.forEach(aid => {
+      const a = addons.find(x => x.id === aid);
+      if (a) unit += (a.price || 0);
+    });
+    document.getElementById('mTotal').textContent = unit * qty;
+  }
+
+  document.getElementById('mMinus').onclick = () => { modalState.qty = Math.max(1, qty - 1); document.getElementById('mQty').textContent = modalState.qty; refreshTotal(); };
+  document.getElementById('mPlus').onclick = () => { modalState.qty = qty + 1; document.getElementById('mQty').textContent = modalState.qty; refreshTotal(); };
+  modal.querySelectorAll('input[data-addon]').forEach(cb => {
+    cb.checked = selected.has(cb.dataset.addon);
+    cb.onchange = () => { cb.checked ? selected.add(cb.dataset.addon) : selected.delete(cb.dataset.addon); refreshTotal(); };
+  });
+  document.getElementById('mClose').onclick = () => modalBack.classList.remove('show');
+  document.getElementById('mAdd').onclick = () => {
+    const chosen = [...selected].map(aid => { const a = addons.find(x => x.id === aid); return { id: a.id, name: a.name, price: a.price }; });
+    cart[item.id] = { item, qty: modalState.qty, addons: chosen };
+    modalBack.classList.remove('show');
+    updateCartbar();
+  };
+  refreshTotal();
+}
+
+modalBack.addEventListener('click', e => { if (e.target === modalBack) modalBack.classList.remove('show'); });
+
+async function submitOrder(tableId, session) {
+  const rows = [];
+  for (const e of Object.values(cart)) {
+    for (let i = 0; i < e.qty; i++) {
+      rows.push({
+        menu_item_id: e.item.id,
+        item_name: e.item.name,
+        item_price: e.item.price,
+        addons: e.addons,
+        quantity: 1
+      });
+    }
+  }
+  const { data: order, error } = await supabase
+    .from('orders').insert({ table_id: tableId, session_id: session.id, status: 'pending' }).select().single();
+  if (error) { alert('Could not place order, please try again.'); console.error(error); return; }
+
+  const items = rows.map(r => ({
+    order_id: order.id, menu_item_id: r.menu_item_id,
+    item_name: r.item_name, item_price: r.item_price,
+    addons: r.addons, quantity: 1
+  }));
+  const { error: itemsErr } = await supabase.from('order_items').insert(items);
+  if (itemsErr) { console.error(itemsErr); alert('Order created but items failed — please tell staff.'); return; }
+
+  for (const k in cart) delete cart[k];
+  document.getElementById('app').className = '';
+  document.getElementById('menuArea').classList.add('hidden');
+  cartbar.style.display = 'none';
+  document.getElementById('confirmedTable').textContent = `Table ${tableNumber}`;
+  document.getElementById('confirmedView').classList.remove('hidden');
+}
+
+(async function init() {
+  const { data: table, error: tableErr } = await supabase
+    .from('tables').select('id').eq('table_number', tableNumber).single();
+  if (tableErr || !table) {
+    document.getElementById('app').className = '';
+    document.getElementById('app').innerHTML = '<div class="expired"><h1>Table not found</h1></div>';
+    return;
+  }
+
+  const session = await getOrCreateSession(table.id);
+  if (!session) return;
+  if (new Date(session.expires_at) <= new Date()) { showExpired(); return; }
+  startCountdown(session.expires_at);
+
+  const to = (p, ms = 10000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('Menu request timed out')), ms))]);
+  let items, addons, menuErr, addErr;
+  try {
+    const r = await to(Promise.all([
+      supabase.from('menu_items').select('*').eq('is_available', true).order('sort_order'),
+      supabase.from('menu_addons').select('*').order('sort_order')
+    ]));
+    items = r[0].data; addons = r[1].data; menuErr = r[0].error; addErr = r[1].error;
+  } catch (e) { menuErr = e; }
+  if (menuErr || addErr) {
+    console.error('Menu load failed:', menuErr || addErr);
+    document.getElementById('app').className = '';
+    document.getElementById('app').innerHTML = '<div class="expired"><h1>Couldn\'t load the menu</h1><p>' + ((menuErr && menuErr.message) || (addErr && addErr.message) || '') + '<br>Please refresh or ask staff.</p></div>';
+    return;
+  }
+
+  const addonsByItem = {};
+  (addons || []).forEach(a => { (addonsByItem[a.menu_item_id] ??= []).push(a); });
+  renderMenu(items, addonsByItem);
+
+  document.getElementById('submitBtn').addEventListener('click', () => submitOrder(table.id, session));
+})();
+
+renderFooter();
+</script>
+</body>
+</html>
