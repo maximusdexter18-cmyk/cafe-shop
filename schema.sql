@@ -23,13 +23,28 @@ create table menu_items (
 );
 
 -- 2b. Optional add-ons per menu item (e.g. "Extra shot", "Oat milk"), configured by admin.
-create table menu_addons (
+-- Run this in Supabase SQL Editor:
+create table if not exists menu_addons (
   id uuid primary key default gen_random_uuid(),
   menu_item_id uuid references menu_items(id) on delete cascade not null,
   name text not null,
-  price numeric(10,2) default 0,
-  sort_order int default 0
+  price numeric(10,2) not null default 0,
+  is_available boolean default true
 );
+
+alter table menu_addons enable row level security;
+
+drop policy if exists "public read addons" on menu_addons;
+create policy "public read addons"
+  on menu_addons for select
+  using (true);
+
+-- Only admins should be able to manage add-ons, matching your admin-gated menu editing
+drop policy if exists "admin write addons" on menu_addons;
+create policy "admin write addons"
+  on menu_addons for all
+  using (auth.uid() in (select id from admins))
+  with check (auth.uid() in (select id from admins));
 
 -- 3. One row per customer "session" created the moment a QR is scanned.
 --    This is what makes the link expire after 10 minutes.
@@ -104,10 +119,7 @@ create policy "admin update menu" on menu_items
 create policy "admin delete menu" on menu_items
   for delete using (exists (select 1 from admins where admins.id = auth.uid()));
 
-create policy "public read addons" on menu_addons for select using (true);
-create policy "admin write addons" on menu_addons
-  for all using (exists (select 1 from admins where admins.id = auth.uid()))
-  with check (exists (select 1 from admins where admins.id = auth.uid()));
+-- (add-ons table, RLS, and admin-only policies are defined in section 2b above)
 
 create policy "public create session" on table_sessions for insert with check (true);
 create policy "public read own session" on table_sessions for select using (true);
@@ -170,9 +182,9 @@ insert into menu_items (category, name, description, price, sort_order) values
   ('Food', 'Saffron Rice Bowl', 'Slow-cooked lentils, charred vegetables, herb oil', 340, 4);
 
 -- Example add-ons (admin can add/remove these in the menu manager)
-insert into menu_addons (menu_item_id, name, price, sort_order)
-select id, 'Extra shot', 30, 1 from menu_items where name = 'Amber Latte';
-insert into menu_addons (menu_item_id, name, price, sort_order)
-select id, 'Oat milk', 20, 2 from menu_items where name = 'Amber Latte';
-insert into menu_addons (menu_item_id, name, price, sort_order)
-select id, 'Warmed', 0, 1 from menu_items where name = 'Burnt-Honey Croissant';
+insert into menu_addons (menu_item_id, name, price, is_available)
+select id, 'Extra shot', 30, true from menu_items where name = 'Amber Latte';
+insert into menu_addons (menu_item_id, name, price, is_available)
+select id, 'Oat milk', 20, true from menu_items where name = 'Amber Latte';
+insert into menu_addons (menu_item_id, name, price, is_available)
+select id, 'Warmed', 0, true from menu_items where name = 'Burnt-Honey Croissant';
