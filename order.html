@@ -61,10 +61,35 @@
   .modal .add-cart:hover{background:var(--red-dk);}
   .modal .close{background:#fff; border:1px solid var(--line); color:var(--ink); padding:14px 18px; border-radius:30px; cursor:pointer; font-weight:700;}
 
-  .cartbar{position:fixed; bottom:0; left:0; right:0; background:var(--red); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; z-index:70; box-shadow:0 -4px 20px rgba(0,0,0,0.2);}
-  .cartbar .total{font-weight:800; font-size:1.15rem;}
-  .cartbar button{background:#fff; color:var(--red); border:none; padding:14px 24px; font-weight:800; border-radius:30px; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em;}
-  .cartbar button:disabled{opacity:0.5; cursor:not-allowed;}
+  .cartbar{position:fixed; bottom:0; left:0; right:0; background:var(--red); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; z-index:70; box-shadow:0 -4px 20px rgba(0,0,0,0.2); gap:12px;}
+  .cartbar .total-wrap{display:flex; align-items:center; gap:10px; cursor:pointer; background:rgba(255,255,255,0.12); padding:8px 14px; border-radius:30px;}
+  .cartbar .total-wrap:hover{background:rgba(255,255,255,0.2);}
+  .cartbar .total{font-weight:800; font-size:1.1rem;}
+  .cartbar .count-badge{background:#fff; color:var(--red); font-size:0.72rem; font-weight:800; padding:2px 8px; border-radius:20px;}
+  .cartbar button.send{background:#fff; color:var(--red); border:none; padding:14px 22px; font-weight:800; border-radius:30px; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap;}
+  .cartbar button.send:disabled{opacity:0.5; cursor:not-allowed;}
+
+  /* Cart drawer — bottom sheet showing everything currently selected */
+  .drawer-back{position:fixed; inset:0; background:rgba(26,26,26,0.55); display:none; z-index:85;}
+  .drawer-back.show{display:block;}
+  .drawer{position:fixed; left:0; right:0; bottom:0; background:#fff; border-radius:20px 20px 0 0; max-height:75vh; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .3s ease; z-index:86;}
+  .drawer.show{transform:translateY(0);}
+  .drawer-head{display:flex; justify-content:space-between; align-items:center; padding:18px 20px 14px; border-bottom:1px solid var(--line);}
+  .drawer-head h3{font-weight:800; font-size:1.15rem; margin:0;}
+  .drawer-head .drawer-close{background:var(--chip); border:none; width:32px; height:32px; border-radius:50%; font-size:1rem; cursor:pointer; color:var(--ink);}
+  .drawer-body{overflow-y:auto; padding:8px 20px 20px; flex:1;}
+  .drawer-empty{text-align:center; color:var(--muted); padding:40px 10px; font-size:0.92rem;}
+  .cart-row{display:flex; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid var(--line);}
+  .cart-row:last-child{border-bottom:none;}
+  .cart-row .info{flex:1;}
+  .cart-row .name{font-weight:800; font-size:0.98rem;}
+  .cart-row .qty-line{font-size:0.82rem; color:var(--muted); margin-top:2px;}
+  .cart-row .addon-line{font-size:0.78rem; color:var(--muted); margin-top:2px;}
+  .cart-row .line-price{font-weight:800; color:var(--red); white-space:nowrap;}
+  .cart-row .remove-btn{margin-top:6px; background:none; border:none; color:var(--muted); font-size:0.76rem; text-decoration:underline; cursor:pointer; padding:0;}
+  .cart-row .remove-btn:hover{color:var(--red);}
+  .drawer-foot{border-top:1px solid var(--line); padding:16px 20px; display:flex; justify-content:space-between; align-items:center;}
+  .drawer-foot .grand-total{font-weight:800; font-size:1.2rem;}
 
   .expired, .confirmed{text-align:center; padding:90px 24px; max-width:520px; margin:0 auto;}
   .expired h1, .confirmed h1{font-weight:800; font-size:1.7rem; margin-bottom:14px; color:var(--ink);}
@@ -105,8 +130,25 @@
 </div>
 
 <div class="cartbar" id="cartbar" style="display:none;">
-  <div class="total">₹<span id="cartTotal">0</span></div>
-  <button id="submitBtn" disabled>Send order to counter</button>
+  <div class="total-wrap" id="openCartBtn">
+    <span class="count-badge" id="cartCountBadge">0</span>
+    <div class="total">₹<span id="cartTotal">0</span></div>
+  </div>
+  <button class="send" id="submitBtn" disabled>Send order to counter</button>
+</div>
+
+<!-- Cart drawer -->
+<div class="drawer-back" id="drawerBack"></div>
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-head">
+    <h3>Your order</h3>
+    <button class="drawer-close" id="drawerCloseBtn">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot">
+    <span>Total</span>
+    <span class="grand-total">₹<span id="drawerGrandTotal">0</span></span>
+  </div>
 </div>
 
 <div id="site-footer"></div>
@@ -128,6 +170,9 @@ const cartbar = document.getElementById('cartbar');
 const timerEl = document.getElementById('timer');
 const modalBack = document.getElementById('modalBack');
 const modal = document.getElementById('modal');
+const drawerBack = document.getElementById('drawerBack');
+const cartDrawer = document.getElementById('cartDrawer');
+const drawerBody = document.getElementById('drawerBody');
 
 // cart: menu_item_id -> { item, qty, addons:[{name,price,id}] }
 const cart = {};
@@ -188,8 +233,55 @@ function updateCartbar() {
   const n = cartCount();
   cartbar.style.display = n ? 'flex' : 'none';
   document.getElementById('cartTotal').textContent = cartTotal();
+  document.getElementById('cartCountBadge').textContent = n;
   document.getElementById('submitBtn').disabled = n === 0;
+  renderDrawer();
 }
+
+// ===== Cart drawer =====
+function renderDrawer() {
+  const entries = Object.entries(cart);
+  if (!entries.length) {
+    drawerBody.innerHTML = '<div class="drawer-empty">Nothing selected yet — tap "Order" on any item to add it here.</div>';
+  } else {
+    drawerBody.innerHTML = entries.map(([id, e]) => {
+      const addonText = e.addons.length
+        ? `+ ${e.addons.map(a => a.name).join(', ')}`
+        : '';
+      return `
+        <div class="cart-row">
+          <div class="info">
+            <div class="name">${e.item.name}</div>
+            <div class="qty-line">Qty ${e.qty} · ₹${e.item.price} each</div>
+            ${addonText ? `<div class="addon-line">${addonText}</div>` : ''}
+            <button class="remove-btn" data-remove="${id}">Remove</button>
+          </div>
+          <div class="line-price">₹${lineTotal(e)}</div>
+        </div>`;
+    }).join('');
+
+    drawerBody.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        delete cart[btn.dataset.remove];
+        updateCartbar();
+      });
+    });
+  }
+  document.getElementById('drawerGrandTotal').textContent = cartTotal();
+}
+
+function openDrawer() {
+  renderDrawer();
+  drawerBack.classList.add('show');
+  cartDrawer.classList.add('show');
+}
+function closeDrawer() {
+  drawerBack.classList.remove('show');
+  cartDrawer.classList.remove('show');
+}
+document.getElementById('openCartBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerCloseBtn').addEventListener('click', closeDrawer);
+drawerBack.addEventListener('click', closeDrawer);
 
 function renderMenu(items, addonsByItem) {
   const byCategory = {};
@@ -316,6 +408,7 @@ async function submitOrder(tableId, session) {
   if (itemsErr) { console.error(itemsErr); alert('Order created but items failed — please tell staff.'); return; }
 
   for (const k in cart) delete cart[k];
+  closeDrawer();
   document.getElementById('app').className = '';
   document.getElementById('menuArea').classList.add('hidden');
   cartbar.style.display = 'none';
